@@ -10,10 +10,16 @@ async function readErrorMessage(response) {
 }
 
 async function request(path, { userId, ...options } = {}) {
-  const response = await fetch(`${API_PREFIX}${path}`, {
-    ...options,
-    headers: { 'X-User-Id': userId, ...options.headers },
-  });
+  let response;
+
+  try {
+    response = await fetch(`${API_PREFIX}${path}`, {
+      ...options,
+      headers: { 'X-User-Id': userId, ...options.headers },
+    });
+  } catch {
+    throw new Error('Não foi possível conectar ao servidor.');
+  }
 
   if (!response.ok) {
     throw new Error(await readErrorMessage(response));
@@ -23,8 +29,13 @@ async function request(path, { userId, ...options } = {}) {
 }
 
 function parseFileName(contentDisposition) {
-  const match = /filename="([^"]+)"/.exec(contentDisposition || '');
-  return match ? match[1] : 'documento';
+  const encoded = /filename\*=UTF-8''([^;]+)/i.exec(contentDisposition || '');
+  if (encoded) {
+    return decodeURIComponent(encoded[1]);
+  }
+
+  const plain = /filename="([^"]+)"/i.exec(contentDisposition || '');
+  return plain ? plain[1] : 'documento';
 }
 
 export async function listDocuments(userId) {

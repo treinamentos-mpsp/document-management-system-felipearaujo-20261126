@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import UploadComponent from './components/UploadComponent';
 import DocumentList from './components/DocumentList';
 import { listDocuments } from './services/documentsApi';
@@ -9,15 +9,24 @@ export default function App() {
   const [userId, setUserId] = useState(DEFAULT_USER_ID);
   const [documents, setDocuments] = useState([]);
   const [loadError, setLoadError] = useState('');
+  const latestRequestId = useRef(0);
+  const trimmedUserId = userId.trim();
 
   const refreshDocuments = useCallback(async () => {
+    const requestId = ++latestRequestId.current;
+
     try {
-      setDocuments(await listDocuments(userId));
-      setLoadError('');
+      const list = await listDocuments(trimmedUserId);
+      if (requestId === latestRequestId.current) {
+        setDocuments(list);
+        setLoadError('');
+      }
     } catch (err) {
-      setLoadError(err.message);
+      if (requestId === latestRequestId.current) {
+        setLoadError(err.message);
+      }
     }
-  }, [userId]);
+  }, [trimmedUserId]);
 
   useEffect(() => {
     refreshDocuments();
@@ -29,18 +38,18 @@ export default function App() {
 
       <label>
         Usuário:{' '}
-        <input value={userId} onChange={(event) => setUserId(event.target.value.trim())} />
+        <input value={userId} onChange={(event) => setUserId(event.target.value)} />
       </label>
 
       <section>
         <h2>Enviar documento</h2>
-        <UploadComponent userId={userId} onUploaded={refreshDocuments} />
+        <UploadComponent userId={trimmedUserId} onUploaded={refreshDocuments} />
       </section>
 
       <section>
         <h2>Documentos</h2>
         {loadError && <p role="alert">{loadError}</p>}
-        <DocumentList documents={documents} userId={userId} />
+        <DocumentList documents={documents} userId={trimmedUserId} />
       </section>
     </main>
   );
