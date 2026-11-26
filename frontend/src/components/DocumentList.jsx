@@ -28,13 +28,13 @@ export default function DocumentList({ documents, userId }) {
         </tr>
       </thead>
       <tbody>
-        {documents.map((document) => (
-          <tr key={document.id}>
-            <td>{document.originalName}</td>
-            <td>{formatSize(document.size)}</td>
-            <td>{formatDate(document.uploadedAt)}</td>
+        {documents.map((item) => (
+          <tr key={item.id}>
+            <td>{item.originalName}</td>
+            <td>{formatSize(item.size)}</td>
+            <td>{formatDate(item.uploadedAt)}</td>
             <td>
-              <DownloadButton documentId={document.id} userId={userId} />
+              <DownloadButton documentId={item.id} userId={userId} />
             </td>
           </tr>
         ))}

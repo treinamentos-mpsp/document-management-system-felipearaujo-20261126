@@ -11,38 +11,29 @@
 // usando multer com diskStorage. Não utilize provedores externos.
 
 const express = require('express');
+const config = require('./config');
 const documentsRoutes = require('./routes/documents.routes');
+const errorHandler = require('./middlewares/error.middleware');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
+
+app.use((req, res, next) => {
+  res.set('X-Content-Type-Options', 'nosniff');
+  next();
+});
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
 app.use(documentsRoutes);
-
-app.use((err, req, res, next) => {
-  if (err.code === 'LIMIT_FILE_SIZE') {
-    return res.status(413).json({ error: 'Arquivo acima do tamanho máximo permitido' });
-  }
-
-  const status = err.status || 500;
-
-  if (status >= 500) {
-    console.error(err);
-  }
-
-  return res.status(status).json({
-    error: status >= 500 ? 'Erro interno do servidor' : err.message,
-  });
-});
+app.use(errorHandler);
 
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`DMS backend ouvindo na porta ${PORT}`);
+  app.listen(config.port, () => {
+    console.log(`DMS backend ouvindo na porta ${config.port}`);
   });
 }
 

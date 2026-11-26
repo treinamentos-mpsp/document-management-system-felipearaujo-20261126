@@ -1,14 +1,6 @@
 const { randomUUID } = require('node:crypto');
 const documentsRepository = require('../repositories/documents.repository');
-
-const { uploadMiddleware } = documentsRepository;
-
-class DocumentNotFoundError extends Error {
-  constructor() {
-    super('Documento não encontrado');
-    this.status = 404;
-  }
-}
+const { DocumentNotFoundError } = require('./documents.errors');
 
 function createDocument(owner, file) {
   return documentsRepository.save({
@@ -34,13 +26,12 @@ function getDownload(id, owner) {
   }
 
   return {
-    filePath: documentsRepository.resolveFilePath(document.storedName),
+    stream: documentsRepository.openReadStream(document.storedName),
     originalName: document.originalName,
   };
 }
 
 module.exports = {
-  uploadMiddleware,
   createDocument,
   listDocuments,
   getDownload,

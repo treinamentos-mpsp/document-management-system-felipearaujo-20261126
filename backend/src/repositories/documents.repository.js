@@ -1,21 +1,10 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const { randomUUID } = require('node:crypto');
-const multer = require('multer');
+const config = require('../config');
 
-const STORAGE_DIR = process.env.STORAGE_DIR || path.join(__dirname, '..', '..', 'storage');
-const MAX_FILE_SIZE = Number(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024;
-
-fs.mkdirSync(STORAGE_DIR, { recursive: true });
+const STORED_NAME_PATTERN = /^[0-9a-f-]{36}(\.[a-z0-9]{1,10})?$/;
 
 const documents = new Map();
-
-const storage = multer.diskStorage({
-  destination: STORAGE_DIR,
-  filename: (req, file, cb) => cb(null, `${randomUUID()}${path.extname(file.originalname)}`),
-});
-
-const uploadMiddleware = multer({ storage, limits: { fileSize: MAX_FILE_SIZE } });
 
 function save(metadata) {
   documents.set(metadata.id, metadata);
@@ -30,14 +19,17 @@ function findByOwner(owner) {
   return [...documents.values()].filter((document) => document.owner === owner);
 }
 
-function resolveFilePath(storedName) {
-  return path.join(STORAGE_DIR, storedName);
+function openReadStream(storedName) {
+  if (!STORED_NAME_PATTERN.test(storedName)) {
+    throw new Error(`Nome de arquivo armazenado inválido: ${storedName}`);
+  }
+
+  return fs.createReadStream(path.join(config.storageDir, storedName));
 }
 
 module.exports = {
-  uploadMiddleware,
   save,
   findById,
   findByOwner,
-  resolveFilePath,
+  openReadStream,
 };

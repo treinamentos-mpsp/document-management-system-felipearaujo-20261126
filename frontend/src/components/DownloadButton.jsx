@@ -35,7 +35,7 @@ export default function DownloadButton({ documentId, userId }) {
       <button type="button" onClick={handleClick} disabled={isDownloading}>
         {isDownloading ? 'Baixando...' : 'Baixar'}
       </button>
-      {error && <span role="alert"> {error}</span>}
+      {error && <span role="alert" style={{ marginLeft: '0.5rem' }}>{error}</span>}
     </>
   );
 }
