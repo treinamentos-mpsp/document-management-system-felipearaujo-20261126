@@ -85,6 +85,9 @@ test('GET /documents lista somente os documentos do dono', async () => {
   assert.strictEqual(response.status, 200);
   assert.strictEqual(list.length, 1);
   assert.strictEqual(list[0].owner, 'mara');
+  assert.strictEqual(list[0].originalName, 'mara.txt');
+  assert.strictEqual(list[0].size, 1);
+  assert.strictEqual(list[0].storedName, undefined);
 });
 
 test('GET download devolve o conteúdo original com nome em UTF-8', async () => {
